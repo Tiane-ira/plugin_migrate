@@ -1,0 +1,13 @@
+# JetBrains IDE 已导出插件列表
+# 导出时间: 2026-09-01 14:10:04
+# 共 8 个插件
+#
+# 注意：部分内置/捆绑插件可能不在 Marketplace 上，下载时会跳过
+# 建议检查列表，移除不需要的插件
+
+JRebelPlugin
+MavenRunHelper
+com.baomidou.plugin.idea.mybatisx
+com.robohorse.robopojogenerator
+izhangzhihao.rainbow.brackets
+zielu.gittoolbox
