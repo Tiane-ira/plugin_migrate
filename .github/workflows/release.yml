@@ -1,0 +1,68 @@
+name: Release binaries
+
+on:
+  push:
+    tags:
+      - 'v20[0-9][0-9].[0-9][0-9].[0-9][0-9]'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: plugin-migrate-windows
+            suffix: .exe
+          - os: ubuntu-latest
+            artifact: plugin-migrate-linux
+            suffix: ''
+          - os: macos-latest
+            artifact: plugin-migrate-macos
+            suffix: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build tools
+        run: python -m pip install -r requirements.txt pyinstaller
+      - name: Build binary
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          printf "VERSION = '%s'\n" "$version" > plugin_migrate/_build_version.py
+          python -m PyInstaller --clean --noconfirm --onefile \
+            --name "plugin-migrate-${{ matrix.artifact }}-${version}" \
+            plugin_migrate/__main__.py
+          if [ -n "${{ matrix.suffix }}" ]; then
+            mv "dist/plugin-migrate-${{ matrix.artifact }}-${version}${{ matrix.suffix }}" \
+               "dist/plugin-migrate-${{ matrix.artifact }}${{ matrix.suffix }}"
+          else
+            mv "dist/plugin-migrate-${{ matrix.artifact }}-${version}" \
+               "dist/plugin-migrate-${{ matrix.artifact }}"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/plugin-migrate-${{ matrix.artifact }}${{ matrix.suffix }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Plugin Migrate ${{ github.ref_name }}
+          generate_release_notes: true
+          files: release-assets/*

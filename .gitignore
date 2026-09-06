@@ -3,4 +3,9 @@
 *.jar
 .idea
 .vscode
+__pycache__
+*.py[cod]
+plugin_migrate/_build_version.py
+build
+dist
 
